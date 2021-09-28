@@ -5,6 +5,7 @@
 #pragma once
 
 #include "cldnn/primitives/convolution.hpp"
+#include "cldnn/primitives/pooling.hpp"
 
 namespace cldnn {
 namespace onednn {
@@ -18,6 +19,7 @@ namespace detail {
     }
 
 REGISTER_ONEDNN_IMPL(convolution);
+REGISTER_ONEDNN_IMPL(pooling);
 
 #undef REGISTER_ONEDNN_IMPL
 

@@ -12,6 +12,7 @@ namespace onednn {
 
 void register_implementations() {
     REGISTER_ONEDNN_IMPL(convolution);
+    REGISTER_ONEDNN_IMPL(pooling);
 }
 
 }  // namespace onednn

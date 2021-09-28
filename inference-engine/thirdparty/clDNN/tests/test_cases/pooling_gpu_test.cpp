@@ -3765,3 +3765,63 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_POOLING,
                         ::testing::Combine(::testing::ValuesIn(pooling_test::generate_generic_test_params()),
                                            ::testing::ValuesIn(pooling_test::generate_specific_test_params())),
                         tests::generic_test::custom_param_name_functor());
+
+// #define ENABLE_ONEDNN_FOR_GPU
+#ifdef ENABLE_ONEDNN_FOR_GPU
+TEST(pooling_forward_gpu_onednn, basic_max_byxf_f32_wsiz3x3_wstr1x1_i1x3x3x8_nopad) {
+    //  Brief test description.
+    //
+    //  Pool window: 3x3
+    //  Pool stride: 1x1
+    //  Pool mode: max
+    //  Padding: none
+    //
+    //  Input data:
+    //  [ 0.5, -0.5, -0.5, -0.5, 0.5f, -0.5, -0.5f, -0.5 ]
+    //  [ 1.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 2.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 3.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 4.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 5.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 6.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 7.0, 0.0, 0.0, 0.0, 0.5, -0.5, -0.5, -0.5 ]
+    //  [ 8.0, 0.0, 0.0, 4.0, 0.5, -0.5, -0.5, -0.5 ]
+    //
+    //  Expected output:
+    //  [ 8.0, 0.0, 0.0, 4,0, 0,5, -0.5, -0.5, -0.5 ]
+
+    auto& engine = get_test_engine();
+
+    auto input_prim = engine.allocate_memory({ data_types::f32,  format::byxf,{ 1, 8, 3, 3 } });
+
+    topology topology;
+    topology.add(input_layout("input_prim", input_prim->get_layout()));
+    topology.add(pooling("pool_prim", "input_prim", pooling_mode::max, { 1, 1, 3, 3 }, { 1, 1, 1, 1 }));
+
+    build_options options_target;
+    options_target.set_option(build_option::outputs({ "input_prim", "pool_prim"}));
+    implementation_desc impl = {format::bfyx, std::string(""), impl_types::onednn};
+    options_target.set_option(build_option::force_implementations({{"pool_prim", impl}}));
+
+    network network(engine, topology, options_target);
+    set_values(input_prim, { 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f,
+        1.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        2.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        3.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        4.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        5.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        6.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        7.0f, 0.0f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, -0.5f,
+        8.0f, 0.0f, 0.0f, 4.0f, 0.5f, -0.5f, -0.5f, -0.5f });
+    network.set_input_data("input_prim", input_prim);
+
+    auto outputs = network.execute();
+    EXPECT_EQ(outputs.size(), size_t(1));
+    EXPECT_EQ(outputs.begin()->first, "pool_prim");
+
+    auto output_prim = outputs.begin()->second.get_memory();
+
+    cldnn::mem_lock<float> output_ptr (output_prim, get_test_stream());
+    EXPECT_EQ(4.0f, output_ptr[3]);
+}
+#endif   // ENABLE_ONEDNN_FOR_GPU
