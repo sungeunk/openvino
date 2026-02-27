@@ -349,13 +349,13 @@ jobs:
       #
 
       - name: Download OpenVINO package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openvino_package
           path: ${{ env.INSTALL_DIR }}
 
       - name: Download OpenVINO tests package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openvino_tests
           path: ${{ env.INSTALL_TEST_DIR }}
@@ -591,13 +591,13 @@ jobs:
         run: apt update && apt install -y git ca-certificates
 
       - name: Download OpenVINO package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openvino_package
           path: ${{ env.INSTALL_DIR }}
 
       - name: Download OpenVINO Developer package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openvino_developer_package
           path: ${{ env.INSTALL_DIR }}
@@ -711,7 +711,7 @@ jobs:
           ref: 'master'
 
       - name: Download OpenVINO package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: openvino_package
           path: ${{ env.INSTALL_DIR }}
